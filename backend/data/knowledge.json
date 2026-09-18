@@ -1,0 +1,92 @@
+[
+    {
+      "id": "soil-carbon-001",
+      "topic": "soil organic carbon",
+      "condition": "low",
+      "variables": ["soil organic carbon", "soil health", "biodiversity"],
+      "recommendation": "Introduce legume-based cover crops and retain crop residues.",
+      "reasoning": "Increasing organic inputs can improve soil structure and biological activity. Greater soil biological activity can support a wider range of soil organisms and contribute to habitat quality.",
+      "metrics": [
+        "soil organic carbon",
+        "soil biological activity",
+        "biodiversity"
+      ],
+      "time_horizon": "medium term",
+      "source": "Food and Agriculture Organization (FAO)"
+    },
+    {
+      "id": "rainfall-001",
+      "topic": "low rainfall",
+      "condition": "low",
+      "variables": ["rainfall", "water availability", "species survival"],
+      "recommendation": "Prioritize drought-tolerant vegetation and improve water-retention practices.",
+      "reasoning": "Low rainfall reduces water availability for plants and organisms. Improving water retention and selecting drought-tolerant vegetation can increase habitat persistence under water stress.",
+      "metrics": [
+        "water availability",
+        "vegetation survival",
+        "habitat resilience"
+      ],
+      "time_horizon": "short to medium term",
+      "source": "FAO"
+    },
+    {
+      "id": "monoculture-001",
+      "topic": "monoculture",
+      "condition": "low habitat diversity",
+      "variables": ["land use", "habitat diversity", "species richness"],
+      "recommendation": "Introduce crop diversification, intercropping, and small habitat strips.",
+      "reasoning": "A monoculture provides relatively uniform habitat. Increasing vegetation and structural diversity can create additional resources and niches for insects, birds, and other organisms.",
+      "metrics": [
+        "habitat diversity",
+        "species richness",
+        "pollinator support"
+      ],
+      "time_horizon": "medium term",
+      "source": "FAO"
+    },
+    {
+      "id": "soil-ph-001",
+      "topic": "alkaline soil",
+      "condition": "high pH",
+      "variables": ["soil pH", "nutrient availability", "plant diversity"],
+      "recommendation": "Select plant species suited to the existing soil pH and increase plant diversity using locally appropriate species.",
+      "reasoning": "Soil pH influences nutrient availability and plant establishment. Matching vegetation to local soil conditions can improve plant establishment and increase habitat diversity.",
+      "metrics": [
+        "nutrient availability",
+        "plant diversity",
+        "habitat diversity"
+      ],
+      "time_horizon": "medium to long term",
+      "source": "FAO"
+    },
+    {
+      "id": "habitat-001",
+      "topic": "habitat fragmentation",
+      "condition": "high fragmentation",
+      "variables": ["land use", "habitat fragmentation", "species movement"],
+      "recommendation": "Create connected habitat corridors between isolated vegetation patches.",
+      "reasoning": "Fragmented habitats can restrict movement between suitable areas. Connecting habitat patches can improve ecological connectivity and provide pathways for species movement.",
+      "metrics": [
+        "habitat connectivity",
+        "species movement",
+        "habitat diversity"
+      ],
+      "time_horizon": "medium to long term",
+      "source": "Intergovernmental Panel on Climate Change (IPCC)"
+    },
+    {
+      "id": "pollution-001",
+      "topic": "pollution",
+      "condition": "high",
+      "variables": ["pollution", "soil health", "biodiversity"],
+      "recommendation": "Identify and reduce the major pollution source while establishing vegetated buffer zones where appropriate.",
+      "reasoning": "Persistent pollutants can affect soil and aquatic organisms and reduce habitat quality. Reducing the source addresses the pressure directly, while vegetation buffers can provide additional protection in suitable settings.",
+      "metrics": [
+        "pollution pressure",
+        "soil health",
+        "biodiversity"
+      ],
+      "time_horizon": "short to medium term",
+      "source": "FAO"
+    }
+  ]
