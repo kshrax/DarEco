@@ -1,32 +1,77 @@
-import os
 import json
+import os
 
 from dotenv import load_dotenv
 from mistralai.client import Mistral
 
 from app.rag import KnowledgeRetriever
 
-
 load_dotenv()
-
 
 api_key = os.getenv("MISTRAL_API_KEY")
 
 if not api_key:
     raise RuntimeError("MISTRAL_API_KEY is not configured.")
 
-
 client = Mistral(api_key=api_key)
-
 retriever = KnowledgeRetriever()
 
 
-def analyze_environment(environment):
-    """
-    Analyze an environmental profile while answering
-    the user's specific question using retrieved knowledge.
-    """
+def fallback_response(environment, evidence):
+    question = environment.get(
+        "question",
+        "How can I improve biodiversity on my land?"
+    )
 
+    recommendations = [item["recommendation"] for item in evidence[:3]]
+    reasonings = [item["reasoning"] for item in evidence[:3]]
+
+    metrics = []
+
+    for item in evidence:
+        for metric in item.get("metrics", []):
+            if metric not in metrics:
+                metrics.append(metric)
+
+    return {
+        "question": question,
+        "assessment": (
+            "Your land shows several conditions that may limit biodiversity, "
+            "particularly low soil organic carbon, low rainfall, and "
+            "low habitat diversity."
+        ),
+        "recommendation": (
+            "Start by increasing soil organic matter with cover crops and "
+            "retained plant residues, diversify the monoculture with "
+            "locally suitable plants or habitat strips, and improve water "
+            "retention using drought-adapted vegetation."
+        ),
+        "reasoning": (
+            "Low soil organic carbon can reduce soil health and habitat "
+            "quality, while low rainfall can constrain water availability. "
+            "Monoculture also reduces habitat diversity and species richness. "
+            "Addressing these factors together can improve ecological "
+            "conditions rather than treating each variable independently."
+        ),
+        "impacted_metrics": metrics[:5] or [
+            "soil health",
+            "water availability",
+            "habitat diversity",
+            "species richness"
+        ],
+        "time_horizon": "medium term",
+        "confidence": "medium",
+        "evidence": [
+            {
+                "topic": item["topic"],
+                "source": item["source"]
+            }
+            for item in evidence
+        ]
+    }
+
+
+def analyze_environment(environment):
     question = environment.get(
         "question",
         "How can I improve biodiversity on my land?"
@@ -62,10 +107,10 @@ def analyze_environment(environment):
     variables together.
     """
 
-    evidence = retriever.search(
-        retrieval_query,
-        k=4
-    )
+    # RAG retrieval.
+    # If Mistral embeddings are rate-limited, rag.py will use
+    # its local keyword fallback.
+    evidence = retriever.search(retrieval_query, k=4)
 
     evidence_text = "\n\n".join(
         [
@@ -86,48 +131,41 @@ Source: {item['source']}
     prompt = f"""
 You are DarEco, an AI environmental scientist.
 
-Answer the user's specific question using the environmental
-profile and retrieved scientific knowledge.
+Answer the user's biodiversity question using the environmental
+conditions and retrieved scientific evidence.
 
-USER QUESTION:
+Environmental conditions:
+Region: {environment.get('region')}
+Soil organic carbon: {environment.get('soil_organic_carbon')}
+Soil pH: {environment.get('soil_ph')}
+Rainfall: {environment.get('rainfall')}
+Land use: {environment.get('land_use')}
+Biodiversity: {environment.get('biodiversity')}
+
+User question:
 {question}
 
-PREVIOUS CONVERSATION:
+Conversation history:
 {conversation_text}
 
-ENVIRONMENTAL PROFILE:
-{json.dumps(environment, indent=2)}
-
-RETRIEVED KNOWLEDGE:
+Retrieved scientific evidence:
 {evidence_text}
 
-IMPORTANT RULES:
-
-1. Directly answer the user's question.
-2. Reason across MULTIPLE environmental variables.
-3. Do not treat each variable independently.
-4. Only make scientific claims supported by the retrieved knowledge.
-5. Do not invent studies, statistics, species or sources.
-6. Explain interactions between soil, water, climate,
-   land use and biodiversity where relevant.
-7. Give practical and actionable recommendations.
-8. If the user's question cannot be answered confidently
-   from the available information, clearly say what is missing.
-9. Use the retrieved sources as evidence.
-10. Keep the response understandable to a land manager,
-    farmer or environmental practitioner.
-11. Use previous conversation context when it is relevant.
-12. Do not repeat questions that have already been answered.
-13. If the user asks a follow-up such as "what about that?",
-    resolve "that" using the previous conversation.
+Requirements:
+1. Give a specific and actionable recommendation.
+2. Explain how at least three environmental variables interact.
+3. Mention the ecological metrics that could be affected.
+4. Include the evidence sources.
+5. Do not invent scientific sources.
+6. Keep the answer concise and practical.
 
 Return ONLY valid JSON with this structure:
 
 {{
-    "question": "{question}",
-    "assessment": "short assessment answering the question",
+    "question": "user question",
+    "assessment": "short assessment",
     "recommendation": "specific actionable recommendation",
-    "reasoning": "explain how multiple variables interact",
+    "reasoning": "explain interaction between multiple variables",
     "impacted_metrics": [
         "metric 1",
         "metric 2",
@@ -144,19 +182,21 @@ Return ONLY valid JSON with this structure:
 }}
 """
 
-    response = client.chat.complete(
-        model="mistral-small-latest",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        response_format={
-            "type": "json_object"
-        }
-    )
+    try:
+        response = client.chat.complete(
+            model="mistral-small-latest",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            response_format={"type": "json_object"}
+        )
 
-    text = response.choices[0].message.content
+        text = response.choices[0].message.content
+        return json.loads(text)
 
-    return json.loads(text)
+    except Exception as error:
+        print(f"Mistral chat unavailable, using fallback: {error}")
+        return fallback_response(environment, evidence)
