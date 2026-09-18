@@ -15,7 +15,7 @@ import {
 
 import "./App.css";
 
-const API_URL = "https://dareco-backend.onrender.com/";
+const API_URL = "https://dareco-backend.onrender.com";
 const initialForm = {
   region: "Semi-arid",
   soil_organic_carbon: 0.3,
