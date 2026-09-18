@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 from app.reasoning import analyze_environment
 
-
 app = FastAPI(
     title="DarEco API",
     description="AI Biodiversity Intelligence System"

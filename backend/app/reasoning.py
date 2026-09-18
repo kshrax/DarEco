@@ -1,18 +1,22 @@
 import os
 import json
-import time
 
 from dotenv import load_dotenv
-from google import genai
+from mistralai.client import Mistral
 
 from app.rag import KnowledgeRetriever
 
 
 load_dotenv()
 
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+
+api_key = os.getenv("MISTRAL_API_KEY")
+
+if not api_key:
+    raise RuntimeError("MISTRAL_API_KEY is not configured.")
+
+
+client = Mistral(api_key=api_key)
 
 retriever = KnowledgeRetriever()
 
@@ -27,10 +31,11 @@ def analyze_environment(environment):
         "question",
         "How can I improve biodiversity on my land?"
     )
+
     conversation_history = environment.get(
-    "conversation_history",
-    []
-)
+        "conversation_history",
+        []
+    )
 
     conversation_text = "\n".join(
         [
@@ -38,7 +43,7 @@ def analyze_environment(environment):
             f"{message.get('content', '')}"
             for message in conversation_history[-6:]
         ]
-)
+    )
 
     retrieval_query = f"""
     User question:
@@ -139,35 +144,19 @@ Return ONLY valid JSON with this structure:
 }}
 """
 
-    # Try Gemini up to 3 times if the service temporarily returns 503
-    response = None
+    response = client.chat.complete(
+        model="mistral-small-latest",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        response_format={
+            "type": "json_object"
+        }
+    )
 
-    for attempt in range(3):
-        try:
-            response = client.models.generate_content(
-                model="gemini-3.6-flash",
-                contents=prompt
-            )
-            break
-
-        except Exception as e:
-            if attempt == 2:
-                raise
-
-            print(
-                f"Gemini temporarily unavailable. "
-                f"Retrying ({attempt + 1}/2)..."
-            )
-
-            time.sleep(2 * (attempt + 1))
-
-    # Get Gemini response
-    text = response.text.strip()
-
-    # Remove markdown code fences if Gemini adds them
-    if text.startswith("```"):
-        text = text.replace("```json", "")
-        text = text.replace("```", "")
-        text = text.strip()
+    text = response.choices[0].message.content
 
     return json.loads(text)
