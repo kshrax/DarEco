@@ -387,8 +387,6 @@ Add:
 
 GEMINI_API_KEY=your_gemini_api_key_here
 
-⚠️ Never commit your .env file or API key to GitHub.
-
 Start the FastAPI server
 
 From the backend directory:
